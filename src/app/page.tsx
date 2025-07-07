@@ -18,30 +18,56 @@
 // }
 // export default page
 
-import { caller, getQueryClient,trpc } from '@/trpc/server'
-import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
-import React, { Suspense } from 'react'
-import Client from './api/client';
-async function page() {
-  // earlier without trpc it was like this
-  // const {data} = await fetch("/api/createAI",body);
-  // which is overhead actually , to create the path , then checking what should
-  // be sent in the body , what is the type of data , etc 
-  // and server component already has access to the db.
+// import { caller, getQueryClient,trpc } from '@/trpc/server'
+// import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
+// import React, { Suspense } from 'react'
+// import Client from './api/client';
+// async function page() {
+//   // earlier without trpc it was like this
+//   // const {data} = await fetch("/api/createAI",body);
+//   // which is overhead actually , to create the path , then checking what should
+//   // be sent in the body , what is the type of data , etc 
+//   // and server component already has access to the db.
 
-  // thats why trpc introduced somethings called as caller
-  // const data = await caller.createAI({text:"Anuj server"})
+//   // thats why trpc introduced somethings called as caller
+//   // const data = await caller.createAI({text:"Anuj server"})
 
-  const queryClient = getQueryClient();
-  void queryClient.prefetchQuery(trpc.createAI.queryOptions({text:"Anuj server"}));
+//   const queryClient = getQueryClient();
+//   void queryClient.prefetchQuery(trpc.createAI.queryOptions({text:"Anuj server"}));
 
   
+//   return (
+//     <HydrationBoundary state={dehydrate(queryClient)}>
+//       <Suspense fallback={<div>Loading...</div>}>
+//         <Client/>
+//       </Suspense>
+//     </HydrationBoundary>
+//   )
+// }
+
+// export default page
+
+
+"use client"
+import { Button } from '@/components/ui/button'
+import { useTRPC } from '@/trpc/client';
+import { useMutation } from '@tanstack/react-query';
+import React from 'react'
+import { toast } from 'sonner';
+
+function page() {
+  const trpc = useTRPC();
+  const invoke = useMutation(trpc.invoke.mutationOptions({
+    onSuccess:()=>{
+      toast.success("Background job started")
+    }
+  }))
   return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
-      <Suspense fallback={<div>Loading...</div>}>
-        <Client/>
-      </Suspense>
-    </HydrationBoundary>
+    <div className='p-4 max-w-7xl mx-auto'>
+      <Button disabled={invoke.isPending} onClick={()=> invoke.mutate({text:"anuj"})}>
+        Invoke BKGRND job
+      </Button>
+    </div>
   )
 }
 
