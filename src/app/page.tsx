@@ -50,12 +50,14 @@
 
 "use client"
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input';
 import { useTRPC } from '@/trpc/client';
 import { useMutation } from '@tanstack/react-query';
 import React from 'react'
 import { toast } from 'sonner';
 
 function page() {
+  const [values, setValues] = React.useState("");
   const trpc = useTRPC();
   const invoke = useMutation(trpc.invoke.mutationOptions({
     onSuccess:()=>{
@@ -64,8 +66,10 @@ function page() {
   }))
   return (
     <div className='p-4 max-w-7xl mx-auto'>
-      <Button disabled={invoke.isPending} onClick={()=> invoke.mutate({text:"anuj"})}>
-        Invoke BKGRND job
+      <Input value={values} onChange={(e)=>setValues(e.target.value)} className='mb-4'>
+      </Input>
+      <Button disabled={invoke.isPending} onClick={()=> invoke.mutate({value: values})}>
+        Invoke Background Job
       </Button>
     </div>
   )
