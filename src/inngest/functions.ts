@@ -1,7 +1,9 @@
 import { inngest } from "./client";
-import { openai, createAgent, anthropic } from "@inngest/agent-kit";
+import { openai, createAgent, anthropic, createTool, createNetwork } from "@inngest/agent-kit";
 import {Sandbox} from "@e2b/code-interpreter"
-import { getSandbox } from "./utils";
+import { getSandbox, lastAssistentTextMessageContent } from "./utils";
+import z from "zod";
+import { PROMPT } from "@/prompt";
 
 export const helloWorld = inngest.createFunction(
   { id: "hello-world" },
@@ -14,19 +16,141 @@ export const helloWorld = inngest.createFunction(
     })
     const codeAgent = createAgent({
       name: "code-agent",
-      system: "You are an expert nextjs developer.  You write reaable , maintainable code , you wirte simple nextjs snippets. like simple button , navbar, input , form, etc",
-      model: openai({ model: "gpt-4o"}),
+      system: PROMPT,
+      description:"An expert coding agent",
+      model: openai({ 
+        model: "gpt-4.1",
+        defaultParameters:{
+          temperature: 0.1,
+        }
+      }),
+      tools:[
+        createTool({
+          name:"terminal",
+          description:"Use the terminal to run the commands",
+          parameters: z.object({
+            command:z.string(),
+          }),
+          handler: async ({command},{step})=>{
+            return await step?.run("terminal",async()=>{
+              const buffers = {stdout:"", stderr:""}
+              try {
+                const sandbox = await getSandbox(sandboxId);
+                // check E2B docs , for running commands in terminal inside sandbox
+                const result = await sandbox.commands.run(command,{
+                  onStdout:(data:string)=>{
+                    buffers.stdout += data;
+                  },
+                  onStderr:(data:string)=>{
+                    buffers.stderr += data;
+                  }
+                });
+                return result.stdout;
+              } catch (error) {
+                console.log(`Command failed: ${error} \nstdout: ${buffers.stdout} \nstderr: ${buffers.stderr}`);
+                //  we are returning the error message to the agent , so that it can handle it
+                // for e.g. if something gets wrong , we know we get a error message ,so our Agent understands that
+                // and retry with something different command.
+                return `Command failed: ${error} \nstdout: ${buffers.stdout} \nstderr: ${buffers.stderr}`
+              }
+            })
+          }
+        }),
+        createTool({
+          name:"createOrUpdateFiles",
+          description:"create and update files in the sandbox",
+          parameters: z.object({
+            files:z.array(
+              z.object({
+                path: z.string(),
+                content: z.string(),
+              })
+            ),
+          }),
+          handler: async ({files},{step,network})=>{
+            const newFiles = await step?.run("create-or-update-files", async () => {
+              try {
+                const updateFiles = network.state.data.files || {};
+                const sandbox = await getSandbox(sandboxId);
+                for (const file of files) {
+                  await sandbox.files.write(file.path, file.content);
+                  updateFiles[file.path] = file.content;
+                }
+                return updateFiles
+              } catch (error) {
+                return `Error creating or updating files: ${error}`;
+              }
+            });
+            if(typeof newFiles === "object") {
+              network.state.data.files = newFiles;
+            }
+          }
+        }),
+        createTool({
+          name:"readFiles",
+          description:"read files from the sandbox",
+          parameters: z.object({
+            files:z.array(z.string()),
+          }),
+          handler: async ({files},{step,network})=>{
+            return await step?.run("read-files", async () => {
+              try {
+                const sandbox = await getSandbox(sandboxId);
+                const contents = [];
+                for (const file of files) {
+                  const content = await sandbox.files.read(file);
+                  contents.push({path:file,content});
+                }
+                return JSON.stringify(contents);
+              } catch (error) {
+                return `Error reading files: ${error}`;
+              }
+            });
+          }
+        }),
+      ],
+      lifecycle:{
+        onResponse: async({result,network})=>{
+          const lastAssistentMessageText = lastAssistentTextMessageContent(result)
+
+          if(lastAssistentMessageText && network){
+            if( lastAssistentMessageText.includes("<task_summary>")){
+              network.state.data.summary = lastAssistentMessageText
+            }
+          }
+          return result;
+        }
+      }
     });
 
-    const {output} = await codeAgent.run(
-      `Write the following snippets:${event.data.value}`,
-    )
+    const network = createNetwork({
+      name: "codehaus-network",
+      agents:[codeAgent],
+      maxIter: 15,
+      router:async ({network}) =>{
+        const summary = network.state.data.summary;
+        if(summary){
+          return
+        }
+        return codeAgent
+      }
+    })
+    // now insted of running the agent , we will run the network now.
+    // const {output} = await codeAgent.run(
+    //   `Write the following snippets:${event.data.value}`,
+    // )
+    const result = await network.run(event.data.value);
 
     const sandboxUrl = await step.run("get-sandbox-url", async () => {
       const sandbox = await getSandbox(sandboxId);
       const host = sandbox.getHost(3000)
       return `https://${host}`;
     })
-    return { output , sandboxUrl };
+    return { 
+      url : sandboxUrl,
+      title: "Fragment",
+      files: network.state.data.files,
+      summary: network.state.data.summary,
+    };
   },
 );
