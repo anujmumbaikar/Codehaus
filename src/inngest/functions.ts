@@ -1,25 +1,33 @@
 import { inngest } from "./client";
-import { openai, createAgent, anthropic, createTool, createNetwork } from "@inngest/agent-kit";
+import { openai, createAgent, anthropic, createTool, createNetwork, type Tool } from "@inngest/agent-kit";
 import {Sandbox} from "@e2b/code-interpreter"
 import { getSandbox, lastAssistentTextMessageContent } from "./utils";
 import z from "zod";
 import { PROMPT } from "@/prompt";
+import prisma from "@/lib/db";
 
-export const helloWorld = inngest.createFunction(
-  { id: "hello-world" },
-  { event: "test/hello.world" },
+interface AgentResponse {
+  summary: string;
+  files:{
+    [path:string]:string
+  }
+}
+
+export const codeAgentFunction = inngest.createFunction(
+  { id: "code-agent" },
+  { event: "code-agent/run" },
 
   async ({ event, step }) => {
     const sandboxId = await step.run("get-sandbox-id", async () => {
       const sandbox = await Sandbox.create("codehaus-nextjs-test")
       return sandbox.sandboxId;
     })
-    const codeAgent = createAgent({
+    const codeAgent = createAgent<AgentResponse>({
       name: "code-agent",
       system: PROMPT,
       description:"An expert coding agent",
       model: openai({ 
-        model: "gpt-4.1",
+        model: "gpt-4.1-mini",
         defaultParameters:{
           temperature: 0.1,
         }
@@ -67,7 +75,7 @@ export const helloWorld = inngest.createFunction(
               })
             ),
           }),
-          handler: async ({files},{step,network})=>{
+          handler: async ({files},{step,network}:Tool.Options<AgentResponse>)=>{
             const newFiles = await step?.run("create-or-update-files", async () => {
               try {
                 const updateFiles = network.state.data.files || {};
@@ -123,7 +131,7 @@ export const helloWorld = inngest.createFunction(
       }
     });
 
-    const network = createNetwork({
+    const network = createNetwork<AgentResponse>({
       name: "codehaus-network",
       agents:[codeAgent],
       maxIter: 15,
@@ -141,11 +149,40 @@ export const helloWorld = inngest.createFunction(
     // )
     const result = await network.run(event.data.value);
 
+    const isError = !result.state.data.summary || Object.keys(result.state.data.files || {}).length === 0;
+
     const sandboxUrl = await step.run("get-sandbox-url", async () => {
       const sandbox = await getSandbox(sandboxId);
       const host = sandbox.getHost(3000)
       return `https://${host}`;
     })
+
+    await step.run("save-result", async () => {
+      if(isError){
+        return await prisma.message.create({
+          data:{
+            content:result.state.data.summary || "No summary generated",
+            role: "ASSISTANT",
+            type:"ERROR",
+          }
+        })
+      }
+      return await prisma.message.create({
+        data:{
+          content:result.state.data.summary,
+          role: "ASSISTANT",
+          type:"RESULT",
+          fragment:{
+            create:{
+              sandboxUrl: sandboxUrl,
+              title: "Fragment",
+              files: result.state.data.files,
+            }
+          }
+        }
+      })
+    })
+
     return { 
       url : sandboxUrl,
       title: "Fragment",
