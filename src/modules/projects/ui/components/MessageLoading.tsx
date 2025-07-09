@@ -21,7 +21,7 @@ const ShimmerMessages = ()=>{
             setCurrentMessageIndex((prevIndex) => (prevIndex +1) % messages.length);
         }, 2000);
         return () => clearInterval(interval);
-    },[messages.length])
+    },[])
     return (
         <div className='flex itmes-center gap-2'>
             <span className='text-base text-muted-foreground animate-pulse'>
