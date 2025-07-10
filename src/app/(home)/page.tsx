@@ -1,4 +1,5 @@
 import ProjectForm from "@/modules/home/ui/components/ProjectFrom"
+import { ProjectList } from "@/modules/home/ui/components/ProjectList"
 import Image from "next/image"
 
 function page() {
@@ -24,6 +25,7 @@ function page() {
             </div>
         </div>
       </section>
+      <ProjectList/>
     </div>
   )
 }
