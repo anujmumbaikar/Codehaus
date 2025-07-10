@@ -12,9 +12,9 @@ interface Props {
   setActiveFragment: (fragment: Fragment | null) => void;
 
 }
-
 function MessagesContainer({ projectId,activeFragment,setActiveFragment }: Props) {
     const bottomRef = React.useRef<HTMLDivElement>(null);
+    const lastAssistantMessageId = React.useRef<string | null>(null);
   const trpc = useTRPC();
   const { data: messages } = useSuspenseQuery(
     trpc.messages.getMany.queryOptions({
@@ -24,11 +24,13 @@ function MessagesContainer({ projectId,activeFragment,setActiveFragment }: Props
     })
   );
   useEffect(()=>{
-    const lastAssistantMessageWithFragment = messages.findLast(
-        (message) => message.role === "ASSISTANT" && message.Fragment,
-    );
-    if (lastAssistantMessageWithFragment) {
-      setActiveFragment(lastAssistantMessageWithFragment.Fragment);
+    const lastAssistentMessage = messages.findLast(
+      (message) => message.role === "ASSISTANT"
+    )
+
+    if(lastAssistentMessage?.Fragment && lastAssistentMessage.id !== lastAssistantMessageId.current){
+      setActiveFragment(lastAssistentMessage.Fragment);
+      lastAssistantMessageId.current = lastAssistentMessage.id;
     }
   },[messages,setActiveFragment])
 
