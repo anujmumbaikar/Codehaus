@@ -26,10 +26,17 @@ export const codeAgentFunction = inngest.createFunction(
       name: "code-agent",
       system: PROMPT,
       description:"An expert coding agent",
-      model: openai({ 
-        model: "gpt-4.1",
+      // model: openai({ 
+      //   model: "gpt-4.1",
+      //   defaultParameters:{
+      //     temperature: 0.1,
+      //   }
+      // }),
+      model: anthropic({
+        model: "claude-3-5-sonnet-20240620",
         defaultParameters:{
           temperature: 0.1,
+          max_tokens: 8192,
         }
       }),
       tools:[

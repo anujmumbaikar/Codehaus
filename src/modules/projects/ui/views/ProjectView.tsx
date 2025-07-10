@@ -71,7 +71,7 @@ function ProjectView({ projectId }: ProjectViewProps) {
             <TabsContent value="Preview" className="h-full">
               {!!activeFragment && <FragmentWeb data={activeFragment} />}
             </TabsContent>
-            <TabsContent value="Code" className="h-full">
+            <TabsContent value="Code" className="min-h-0">
               {!!activeFragment?.files && (
                 <FileExplorer
                 files={activeFragment.files as {[path: string]: string}}

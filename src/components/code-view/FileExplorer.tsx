@@ -12,8 +12,12 @@ import {
     BreadcrumbEllipsis,
     BreadcrumbPage
 } from "../ui/breadcrumb"
-
+import { convertFilesToTreeItems } from "@/lib/utils";
+import TreeView from "../tree-view";
 type FileCollection = {[path: string]: string};
+
+
+
 
 function getLanguageFromExtension(filename: string): string {
     const extension = filename.split('.').pop()?.toLowerCase();
@@ -24,14 +28,38 @@ interface FileExplorerProps {
 }
 
 export const FileExplorer = ({files}:FileExplorerProps) => {
+  const [copied, setCopied] = useState(false);
     const [selectedFile, setSelectedFile] = useState<string | null>(()=>{
         const fileKeys = Object.keys(files);
         return fileKeys.length > 0 ? fileKeys[0] : null;
     });
+    const treeeData = useMemo(() => {
+        return convertFilesToTreeItems(files);
+    },[files]);
+
+    const handleFileSelect = useCallback(
+        (filePath: string) => {
+            if (files[filePath]) {
+                setSelectedFile(filePath);
+            }
+        },
+        [files]
+    );
+    const handleCopy = () => {
+        if(selectedFile){
+            navigator.clipboard.writeText(files[selectedFile]);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        }
+    };
     return (
         <ResizablePanelGroup direction="horizontal">
             <ResizablePanel defaultSize={30} minSize={20} className="bg-sidebar">
-                FILES TREE
+                <TreeView
+                data={treeeData}
+                value={selectedFile}
+                onSelect={handleFileSelect}
+                />
             </ResizablePanel>
             <ResizableHandle className="hover:bg-primary transition-colors"/>
             <ResizablePanel defaultSize={70} minSize={50}>
@@ -43,14 +71,19 @@ export const FileExplorer = ({files}:FileExplorerProps) => {
                                     variant="outline"
                                     size="icon"
                                     className="ml-auto"
-                                    onClick={() => {}}
-                                    disabled={false}
+                                    onClick={handleCopy}
+                                    disabled={copied}
                                 >
-                                    <CopyIcon />
+                                    {copied ? <CopyCheckIcon /> : <CopyIcon />}
                                 </Button>
                             </Hint>
                         </div>
-                        <p>Code View</p>
+                        <div className="overflow-auto flex-1">
+                            <CodeView 
+                            code={files[selectedFile]}
+                            lang={getLanguageFromExtension(selectedFile)}
+                            />
+                        </div>
                     </div>
                 ):(
                     <div className="flex h-full items-center justify-center text-muted-foreground">
