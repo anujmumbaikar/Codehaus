@@ -12,11 +12,12 @@ import { Fragment } from "@/generated/prisma";
 import ProjectHeader from "../components/ProjectHeader";
 import FragmentWeb from "../components/FragmentWeb";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CodeIcon, Croissant, CrownIcon, EyeIcon } from "lucide-react";
+import { CodeIcon, Croissant, CrownIcon, EyeIcon, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { TabsContent } from "@radix-ui/react-tabs";
 import { FileExplorer } from "@/components/code-view/FileExplorer";
+import UserControl from "@/components/user-control/UserControl";
 
 interface ProjectViewProps {
   projectId: string;
@@ -66,6 +67,7 @@ function ProjectView({ projectId }: ProjectViewProps) {
                     <CrownIcon /> Upgrade
                   </Link>
                 </Button>
+                <UserControl/>
               </div>
             </div>
             <TabsContent value="Preview" className="h-full">

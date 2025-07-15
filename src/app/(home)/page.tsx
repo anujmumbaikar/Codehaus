@@ -18,7 +18,7 @@ function page() {
               Build Something with your Vibe !
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground text-center">
-              Create apps and websites by chatting with AI.
+              Just describe it — we’ll help you build it.
             </p>
             <div className="max-w-3xl mx-auto w-full">
               <ProjectForm/>
