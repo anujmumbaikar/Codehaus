@@ -35,10 +35,14 @@ function ProjectForm() {
     const createProject = useMutation(trpc.projects.create.mutationOptions({
         onSuccess: (data) => {
             queryClient.invalidateQueries(trpc.projects.getMany.queryOptions());
+            queryClient.invalidateQueries(trpc.useage.status.queryOptions());
             router.push(`/projects/${data.id}`);
         },
         onError: (error) => {
             toast.error(`Failed to send message: ${error.message}`);
+            if (error.message === "TOO_MANY_REQUESTS") {
+                router.push('/pricing');
+            }
         },
     }))
     const isPending = createProject.isPending

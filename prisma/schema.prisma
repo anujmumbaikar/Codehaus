@@ -48,3 +48,9 @@ enum MessageType {
   RESULT
   ERROR
 }
+
+model Useage {
+  key String @id
+  points Int
+  expire DateTime?
+}

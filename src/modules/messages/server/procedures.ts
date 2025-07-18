@@ -1,5 +1,6 @@
 import { inngest } from "@/inngest/client";
 import prisma from "@/lib/db";
+import { consumeCredits } from "@/lib/useageTracker";
 import { baseProcedure, createTRPCRouter } from "@/trpc/init";
 import z from "zod";
 
@@ -38,6 +39,14 @@ export const messagesRouter = createTRPCRouter({
             }),
         )
         .mutation(async ({input})=>{
+            try {
+                await consumeCredits()
+            } catch (error) {
+                if(error instanceof Error) {
+                    throw new Error(`Failed to consume credits: ${error.message}`);
+                }
+                throw new Error("Failed to consume credits");
+            }
             const createdMessage = await prisma.message.create({
                 data:{
                     content: input.value,
@@ -54,6 +63,6 @@ export const messagesRouter = createTRPCRouter({
                 },
             })
             return createdMessage;
-        })
+        })                   
 });
 

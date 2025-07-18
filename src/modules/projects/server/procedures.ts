@@ -5,6 +5,7 @@ import { tr } from "date-fns/locale";
 import z from "zod";
 import { generateSlug } from "random-word-slugs";
 import { TRPCError } from "@trpc/server";
+import { consumeCredits } from "@/lib/useageTracker";
 
 export const projectsRouter = createTRPCRouter({
   getOne: baseProcedure
@@ -44,6 +45,14 @@ export const projectsRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ input }) => {
+      try {
+          await consumeCredits()
+      } catch (error) {
+          if(error instanceof Error) {
+              throw new Error(`Failed to consume credits: ${error.message}`);
+          }
+          throw new Error("Failed to consume credits");
+      }
       const createdProject = await prisma.project.create({
         data: {
           name: generateSlug(2, {
