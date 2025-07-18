@@ -5,6 +5,7 @@ import Image from "next/image"
 import {SignIn,SignedOut,SignInButton, SignUpButton, SignedIn} from "@clerk/nextjs";
 import {Button} from "@/components/ui/button";
 import UserControl from "@/components/user-control/UserControl";
+import { CrownIcon } from "lucide-react";
 function Navbar() {
   return (
     <nav className="p-4 bg-transparent fixed top-0 left-0 right-0 z-50 transition-all duration-200 border-b border-transparent">
@@ -18,6 +19,16 @@ function Navbar() {
             />
             <span className="font-medium text-xl">CodeHaus</span>
             </Link>
+            <Button
+                asChild
+                size="sm"
+                variant="secondary"
+                className="ml-auto"
+            >
+                <Link href="/pricing">
+                <CrownIcon/> Upgrade
+                </Link>
+            </Button>
             <SignedOut>
                 <div className="flex gap-2">
                     <SignUpButton>
