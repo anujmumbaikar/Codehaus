@@ -1,4 +1,4 @@
-# CodeHaus [alt image](https://github.com/anujmumbaikar/Codehaus/blob/0aa7c4b6a2cde75db2c9abbfa8fe2dfaf0b815e3/public/CodeHaus.svg)
+# CodeHaus ![alt image](https://github.com/anujmumbaikar/Codehaus/blob/0aa7c4b6a2cde75db2c9abbfa8fe2dfaf0b815e3/public/CodeHaus.svg)
 
 **CodeHaus** is a vibe-based coding platform — describe what you want, and we’ll build it for you.  
 Your ideas, turned into working code within minutes.  
