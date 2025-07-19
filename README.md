@@ -1,12 +1,19 @@
-# CodeHaus ![alt image](https://github.com/anujmumbaikar/Codehaus/blob/0aa7c4b6a2cde75db2c9abbfa8fe2dfaf0b815e3/public/CodeHaus.svg)
+#![alt image](https://github.com/anujmumbaikar/Codehaus/blob/0aa7c4b6a2cde75db2c9abbfa8fe2dfaf0b815e3/public/CodeHaus.svg) CodeHaus 
 
 **CodeHaus** is a vibe-based coding platform — describe what you want, and we’ll build it for you.  
 Your ideas, turned into working code within minutes.  
 Write code with your vibe.
 
+![alt image](https://github.com/anujmumbaikar/Codehaus/blob/048ad1be96e2a4ae998cbd157c27b67493a1a243/assets/1.png)
+
+![alt image](https://github.com/anujmumbaikar/Codehaus/blob/048ad1be96e2a4ae998cbd157c27b67493a1a243/assets/3.png)
+
+## AI CODE WORKFLOW
+![alt image](https://github.com/anujmumbaikar/Codehaus/blob/048ad1be96e2a4ae998cbd157c27b67493a1a243/assets/workflow.png)
+
 ## ✨ Highlights
 
-- Describe your idea, and CodeHaus does the heavy lifting — from UI to backend logic.
+- Describe your idea, what you want , our code agent will build it.
 - View your project live in real-time.
 - Share your project temporarily or keep it permanent as a pro user.
 - All within a few minutes, powered by AI.
@@ -55,7 +62,7 @@ Write code with your vibe.
    git clone https://github.com/your-username/codehaus.git
    cd codehaus
     ```
-2. **Install dependencies
+2. **Install dependencies**
     ```bash 
     # with npm
     npm install
@@ -64,7 +71,7 @@ Write code with your vibe.
     # or with bun
     bun install
     ```
-3. **Setup Environment variables
+3. **Setup Environment variables**
     create a .env file and configure the following:
     ```bash
     DATABASE_URL =
@@ -83,7 +90,7 @@ Write code with your vibe.
 
     NEXT_PUBLIC_CLERK_SIGN_UP_URL=
     ```
-4. **Run the deployment server
+4. **Run the deployment server**
     ```bash
     npm run dev
     ```
